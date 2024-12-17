@@ -1,0 +1,6 @@
+## Build results
+bin/
+obj/
+
+## Ignore files specific to Visual Studio for Mac
+.vs/

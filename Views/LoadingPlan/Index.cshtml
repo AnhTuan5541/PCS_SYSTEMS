@@ -1,0 +1,400 @@
+﻿<div>
+    <div class="form-group row">
+        <div class="col-6">
+            <div class="" id="divUploadFile">
+                <label class="" for="uploadFile" disabled="">Upload file</label>
+                <input type="file" class="" id="uploadFile">
+                <button class="btn btn-info" id="btnUploadFile" onclick="uploadFile()">Upload</button>
+            </div>
+            <div id="divSelectedEachThickness">
+                
+            </div>
+            <div>Total quantity selected: <span id="totalDieChecked">0</span></div>
+
+            <div><span id="divThickness"></span></div>
+        </div>
+        
+        @* <div class="col-3"></div> *@
+        <div class="col-6">
+            <table class="table table-bordered" id="tbThickness">
+                <thead id="theadThickness">
+                    <tr id="trheadThickness">
+                        <th>#</th>
+                        <th>Wafer Lot</th>
+                        <th>Wafer qty</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyThickness">
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+    
+    <div>
+        <table class="table table-bordered" id="tbData">
+            <thead id="thead">
+                <tr id="trhead">
+                    <th>#<span><input class="checkBoxDie d-none" type="checkbox" onclick="selectAllLot()" id="checkboxAll" ></span></th>
+                    <th>Wafer Lot</th>
+                    <th>Wafer qty</th>
+                    <th>Die qty</th>
+                    <th>1</th>
+                    <th>2</th>
+                    <th>3</th>
+                    <th>4</th>
+                    <th>5</th>
+                    <th>6</th>
+                    <th>7</th>
+                    <th>8</th>
+                    <th>9</th>
+                    <th>10</th>
+                    <th>11</th>
+                    <th>12</th>
+                    <th>13</th>
+                    <th>14</th>
+                    <th>15</th>
+                    <th>16</th>
+                    <th>17</th>
+                    <th>18</th>
+                    <th>19</th>
+                    <th>20</th>
+                    <th>21</th>
+                    <th>22</th>
+                    <th>23</th>
+                    <th>24</th>
+                    <th>25</th>
+                </tr>
+            </thead>
+            <tbody id="tbody">
+            </tbody>
+
+        </table>
+        <button class="btn btn-success" id="btnSave" onclick="save()">Save</button>
+        <button class="btn btn-danger" id="btnDelete" onclick="deleteThickness()">Delete</button>
+        <button class="btn btn-secondary" id="btnReset" onclick="reset()">Reset</button>
+        <button class="btn btn-primary" style="float: right" id="btnExport" onclick="exportExcel()">Export</button>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        let colors = ["red", "#5ef55e", "yellow", "orange", "#fd2ffd", "#0dcaf0", "#ff8ca8"];
+        let selectedColor;
+        let thicknessName;
+        $(document).ready(function () {
+            getThickness()
+            getRawData()
+            getTotalDieByThickness()
+        });
+        function uploadFile() {
+            let formData = new FormData();
+            let fileUpload = document.getElementById("uploadFile")
+            formData.append("file", fileUpload.files[0])
+            formData.append('userid', _userID);
+
+            $.ajax({
+                url: '/LoadingPlan/UploadFile',
+                type: 'POST',
+                headers: {
+                    
+                },
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (res) {
+                    if (res.statusCode == "FAIL") {
+                        alert(res.message)
+                    } else {
+                        alert(res.message)
+                        getThickness()
+                        getRawData()
+                        getTotalDieByThickness()
+                    }
+
+                },
+                error: function (err) {
+                    if (err.status == 401) {
+                        logout();
+                    }
+                    else {
+                        alert(err.responseJSON.message)
+                    }
+                }
+            });
+        }
+        function getRawData() {
+            $.ajax({
+                url: '/LoadingPlan/GetRawData',
+                type: 'GET',
+                headers: {
+                    
+                },
+                data: {
+                    "userid" : _userID
+                },
+                success: function (res) {
+                    let data = res.data
+                    let htmlTBody = '<tr>'
+                    for (let i = 0; i < data.length; i++) {
+                        htmlTBody += ` <td>${i + 1}<span><input class="checkBoxDie d-none" type="checkbox" onclick="selectFullLot(${i})" thickness="" id="motherCheckBox${i}" value="${data[i][0].die_quantity}"></span></td>
+                                        <td>${data[i][0].wafer_lot}</td>
+                                        <td>${data[i][0].wafer_quantity}</td>
+                                        <td>${data[i][0].die_quantity}</td>`
+                        for (let j = 0; j < data[i].length; j++) {
+                            htmlTBody += `<td style="cursor:pointer; background-color: ${data[i][j].backgroundColor}"><span onclick="selectSpanEachSlice(this)"> ${data[i][j].slice_die_quantity}</span><span><input class="checkBoxDie checkBoxChild d-none" onclick="selectEachSlice()" type="checkbox" thickness="${data[i][j].thickness}" id="mother${i}child${j}" slice-id="${data[i][j].slice_id}" mother="mother${i}" value="${data[i][j].slice_die_quantity}"></span></td>`
+                        }
+                        htmlTBody += '</tr>'
+                    }
+                    $('#tbody').html(htmlTBody)
+                },
+                error: function (err) {
+                    if (err.status == 401) {
+                        logout();
+                    }
+                    else {
+                        alert('An error occurred. ' + err.responseText);
+                    }
+                }
+            });
+        }
+        function getThickness() {
+            $.ajax({
+                url: '/LoadingPlan/GetThickness',
+                type: 'GET',
+                headers: {
+
+                },
+                data: {
+                    "userid": _userID
+                },
+                success: function (res) {
+                    let data = res.data
+                    let htmlTrHeadThickness = ''
+                    let htmlTbodyThickness = '<tr>'
+                    for (const obj of data) {
+                        let i = 0;
+                        for (const key in obj) {
+                            if (key == 'Total Die') {
+                                htmlTrHeadThickness += `<th style='background-color: ${colors[i % colors.length]}'>${key}</th>`
+                            } else {
+                                htmlTrHeadThickness += `<th onclick='selectThichness("${key}", "${colors[i % colors.length]}")' style='cursor:pointer; background-color: ${colors[i % colors.length]}'>${key}</th>`
+                            }
+                            
+                            htmlTbodyThickness += `<th>${obj[key]}</th>`
+                            i++;
+                        }
+                    }
+                    htmlTbodyThickness += '</tr>'
+                    $('#trheadThickness').html(htmlTrHeadThickness)
+                    $('#tbodyThickness').html(htmlTbodyThickness)
+                },
+                error: function (err) {
+                    if (err.status == 401) {
+                        logout();
+                    }
+                    else {
+                        alert('An error occurred. ' + err.responseText);
+                    }
+                }
+            });
+        }
+        function getTotalDieByThickness(){
+            $.ajax({
+                url: '/LoadingPlan/GetTotalDieByThickness',
+                type: 'GET',
+                headers: {
+
+                },
+                data: {
+                    "userid": _userID
+                },
+                success: function (res) {
+                    let data = res.data
+                    let htmlSelectedThickness ='';
+                    for (let i = 0; i < data.length; i++) {
+                        htmlSelectedThickness += `<div>${data[i].thickness}: ${data[i].total_die}</div>`
+                    }
+                    $('#divSelectedEachThickness').html(htmlSelectedThickness)
+                },
+                error: function (err) {
+                    if (err.status == 401) {
+                        logout();
+                    }
+                    else {
+                        alert('An error occurred. ' + err.responseText);
+                    }
+                }
+            });
+        }
+        function selectThichness(thickness, color) {
+            selectedColor = color;
+            thicknessName = thickness;
+            $('.checkBoxDie').removeClass('d-none');
+            $('#divThickness').html(thickness)
+            $('#divThickness').css('background-color', color);
+        }
+        function selectAllLot() {
+            if ($(`#checkboxAll`).is(':checked')) {
+                $(`.checkBoxDie`).prop('checked', true);
+            } else {
+                $(`.checkBoxDie`).prop('checked', false);
+            }
+            calculateDieSelected()
+        }
+        function selectFullLot(i) {
+            if ($(`#motherCheckBox${i}`).is(':checked')) {
+                $(`input[mother="mother${i}"]`).prop('checked', true);
+            } else {
+                $(`input[mother="mother${i}"]`).prop('checked', false);
+            }
+            calculateDieSelected()
+        }
+        function selectSpanEachSlice(element) {
+            const checkbox = $(element).next().find('.checkBoxChild');
+            checkbox.prop('checked', !checkbox.prop('checked'));
+            calculateDieSelected();
+        }
+        function selectEachSlice() {
+            calculateDieSelected()
+        }
+        function calculateDieSelected(){
+            const totalValue = $('.checkBoxChild:checked').map(function () {
+                // Kiểm tra xem có giá trị value hay không
+                const value = $(this).val();
+                return value ? parseFloat(value) : 0;
+            }).get().reduce((a, b) => a + b, 0);
+            $(`#totalDieChecked`).html(totalValue)
+        }
+        function save() {
+            if (confirm('Do you want to save slice for thickness?')) {
+                const sliceIds = $('.checkBoxChild:checked').map(function () {
+                    return $(this).attr('slice-id');
+                }).get().join(';');
+                let data = {
+                    "userid": _userID,
+                    "thicknessName": thicknessName,
+                    "sliceIds": sliceIds,
+                    "backgroundColor": selectedColor
+                }
+                $.ajax({
+                    url: '/LoadingPlan/SaveSliceForThickness',
+                    type: 'POST',
+                    headers: {
+                        
+                    },
+                    data: JSON.stringify(data),
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    success: function (res) {
+                        alert(res.message)
+                        location.reload();
+                    },
+                    error: function (err) {
+                        if (err.status == 401) {
+                            logout();
+                        }
+                        else {
+                            alert(err.responseJSON.message)
+                        }
+                    }
+                });
+            }
+        }
+        function deleteThickness() {
+            if (confirm('Do you want to delete slice for thickness?')) {
+                const sliceIds = $('.checkBoxChild:checked').map(function () {
+                    return $(this).attr('slice-id');
+                }).get().join(';');
+                let data = {
+                    "userid": _userID,
+                    "thicknessName": "",
+                    "sliceIds": sliceIds,
+                    "backgroundColor": ""
+                }
+                $.ajax({
+                    url: '/LoadingPlan/SaveSliceForThickness',
+                    type: 'POST',
+                    headers: {
+
+                    },
+                    data: JSON.stringify(data),
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    success: function (res) {
+                        alert(res.message)
+                        location.reload();
+                    },
+                    error: function (err) {
+                        if (err.status == 401) {
+                            logout();
+                        }
+                        else {
+                            alert(err.responseJSON.message)
+                        }
+                    }
+                });
+            }
+        }
+        function reset() {
+            if (confirm('Do you want to reset slice for thickness?')) {
+                let data = {
+                    "userid": _userID
+                }
+                $.ajax({
+                    url: '/LoadingPlan/ResetSliceForThickness',
+                    type: 'POST',
+                    headers: {
+
+                    },
+                    data: JSON.stringify(data),
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    success: function (res) {
+                        alert(res.message)
+                        location.reload();
+                    },
+                    error: function (err) {
+                        if (err.status == 401) {
+                            logout();
+                        }
+                        else {
+                            alert(err.responseJSON.message)
+                        }
+                    }
+                });
+            }
+        }
+        function exportExcel(){
+            $.ajax({
+                url: '/LoadingPlan/Export',
+                type: 'GET',
+                headers: {
+
+                },
+                data: {
+                    "userid": _userID
+                },
+                success: function (res) {
+                    let base64Data = res.data;
+
+                    // Tạo link download
+                    let downloadLink = document.createElement("a");
+                    downloadLink.href = "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + base64Data;
+                    downloadLink.download = "Loading plan.xlsx"; // Đặt tên file tải xuống
+
+                    // Click link để download
+                    downloadLink.click();
+                },
+                error: function (err) {
+                    if (err.status == 401) {
+                        logout();
+                    }
+                    else {
+                        alert('An error occurred. ' + err.responseText);
+                    }
+                }
+            });
+        }
+
+    </script>
+}

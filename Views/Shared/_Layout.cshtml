@@ -1,0 +1,372 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PCS system - @ViewData["Title"]</title>
+    <link rel="icon" href="/img/planning.png" />
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+            font-family: Courier New, Courier, monospace;
+            margin: 0;
+        }
+
+        #wrapper {
+            display: flex;
+            flex: 1;
+        }
+
+        /* Sidebar Styles */
+        #sidebar {
+            background-color: #212529;
+            color: #fff;
+            padding: 10px;
+            transition: width 0.3s ease-in-out;
+            width: fit-content;
+            /* min-width: 60px; */
+        }
+
+            #sidebar.collapsed {
+                display: flex;
+                width: fit-content;
+            }
+
+            #sidebar .list-group-item-text {
+                transition: opacity 0.3s ease-in-out;
+            }
+
+            #sidebar.collapsed .list-group-item-text {
+                /* opacity: 0; */
+                display: none;
+            }
+
+            #sidebar.collapsed a {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            #sidebar.collapsed i {
+                margin: unset;
+            }
+
+        .sidebar-header {
+            padding: 20px 0;
+            text-align: center;
+        }
+
+        .sidebar-logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .list-group-item {
+            background-color: transparent;
+            border: none;
+            padding: 10px 0;
+        }
+
+            .list-group-item a {
+                color: #adb5bd;
+                text-decoration: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+                transition: background-color 0.3s ease-in-out;
+                display: flex;
+                align-items: center;
+                justify-content: left;
+            }
+
+                .list-group-item a i {
+                    margin-right: 10px;
+                }
+
+                .list-group-item a:hover {
+                    background-color: #343a40;
+                }
+
+                .list-group-item a.active {
+                    background-color: #007bff;
+                    color: #fff;
+                }
+
+        /* Content Styles */
+        #content {
+            flex: 1;
+            padding: 6px;
+            background-color: #f8f9fa;
+            min-height: 100%;
+            overflow: auto;
+        }
+
+        /* Footer Styles */
+        #footer {
+            background-color: #343a40;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+        }
+
+        /* Header Styles */
+        .navbar {
+            background-color: #212529;
+        }
+
+        .navbar-brand {
+            color: #fff;
+        }
+
+        .navbar-nav .nav-link {
+            color: #adb5bd;
+        }
+
+            .navbar-nav .nav-link:hover {
+                color: #fff;
+            }
+
+        .user-dropdown,
+        .notification-dropdown {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            min-width: 200px;
+            padding: 0.5rem 0;
+        }
+
+        .dropdown-item {
+            padding: 0.5rem 1rem;
+        }
+
+        .notification-count {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: red;
+            color: #fff;
+            border-radius: 50%;
+            padding: 2px 5px;
+            font-size: 10px;
+        }
+
+        .notification-item {
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+            .notification-item:last-child {
+                border-bottom: none;
+            }
+
+            .notification-item.unread {
+                background-color: #f8f9fa;
+            }
+
+        .divContent{
+            position: relative;
+            min-width: 100%;
+            min-height: 100%;
+        }
+        .divContent .divLoad{
+                position: absolute;
+                z-index: 2;
+                background-color: #1C273A;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                opacity: 86%;
+                min-width: 100%;
+                min-height: 100%;
+        }
+        .divContent .divBody{
+                position: absolute;
+                z-index: 1;
+                min-width: 100%;
+                min-height: 100%
+        }
+    </style>
+
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand sidebar-logo"><img src="/img/initial-pcs.png" style="border-radius:50%; width:35px;" /> PCS TEAM</a>
+                <button class="btn btn-outline-light" id="sidebarCollapse">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown notification-dropdown">
+                        <a class="nav-link" href="#" id="notificationDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-count">2</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown">
+                            <li class="notification-item unread">
+                                <a href="#">
+                                    Thông báo mới 1
+                                </a>
+                            </li>
+                            <li class="notification-item unread">
+                                <a href="#">
+                                    Thông báo mới 2
+                                </a>
+                            </li>
+                            <li class="notification-item">
+                                <a href="#">
+                                    Thông báo cũ
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown user-dropdown">
+                        <a class="nav-link" href="#" id="displayName" role="button" data-bs-toggle="dropdown"
+                           aria-expanded="false">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="displayName">
+                            @* <li><a class="dropdown-item" href="#">Profile</a></li> *@
+                            @* <li>
+                                <hr class="dropdown-divider">
+                            </li> *@
+                            <li><button class="dropdown-item" onclick="logOut()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <div id="wrapper">
+        <aside id="sidebar">
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <a href="" class="active">
+                        <i class="fas fa-home"></i>
+                        <span class="list-group-item-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="list-group-item">
+                    <a href="/LoadingPlan">
+                        <i class="fa-solid fa-spinner"></i>
+                        <span class="list-group-item-text">Loading Plan</span>
+                    </a>
+                </li>
+                <li class="list-group-item">
+                    <a href="#">
+                        <i class="fa-brands fa-autoprefixer"></i>
+                        <span class="list-group-item-text">Auto Schedule</span>
+                    </a>
+                </li>
+                <li class="list-group-item">
+                    <a href="#" class="d-none" id="itemSetting">
+                        <i class="fas fa-cog"></i>
+                        <span class="list-group-item-text">Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <main id="content">
+            <div class="divContent">
+                <div class="divLoad d-none" id="divLoading">
+                    <img src="~/img/ld1.gif" />
+                </div>
+                <div class="divBody">
+                    @RenderBody()
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer id="footer">
+        ©2024 TEST IT. All rights reserved.
+    </footer>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Plotly -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <script>
+        const urlSend = window.location.href;
+        // Trước khi deploy phải sửa localhost thành :10.201.12.31
+        let urlAuth;
+        if (urlSend.includes("localhost")) {
+            urlAuth = `http://localhost:8007/auth?urlCall=${urlSend}`;
+        } else{
+            urlAuth = `http://10.201.12.31:8007/auth?urlCall=${urlSend}`;
+        }
+        
+        // Toggle sidebar collapse
+        $(document).ready(function () {
+            checkInfo();
+            $('#sidebarCollapse').on('click', function () {
+                $('#sidebar').toggleClass('collapsed');
+            });
+        });
+
+        let _userID, _userName, _userMail, _userDeparment, _userSystem, _userRole, _userActive;
+        function checkInfo(){
+            
+            const userInfoToken = getCookie('us_in_token');
+            const token = getCookie('auth_token');
+            if (!token) {
+                window.location.href = urlAuth;
+            }
+            else {
+                [_userID, _userName, _userMail, _userDeparment, _userSystem, _userRole, _userActive] = userInfoToken.split('|');
+                if (_userActive === '1') {
+                    $('#displayName').html(`<i class="fas fa-user"></i> ${_userName}`);
+                    // Ẩn hiện item setting
+                    if (_userRole === ("Develop" || "Admin")) {
+                        $("#itemSetting").removeClass("d-none");
+                    }
+                    // Kiểm tra quyền truy cập của từng feature trong system
+                    if (_userSystem.includes("PCS")) {
+
+                    } else {
+                        alert(`Your account don't have permission access to PCS System!\nPlease contact Admin to grant permission for your account!\nTài khoản của bạn không có quyền truy cập vào PCS System!\nVui lòng liên hệ Admin để cung cấp cho tài khoản của tài khoản của bạn!`);
+                        window.location.href = urlAuth;
+                    }
+                } else {
+                    alert(`Your account has been blocked!\nPlease contact Admin to open your account!\nTài khoản của bạn đã bị khóa!\nVui lòng liên hệ Admin để mở khóa tài khoản của bạn!`);
+                    logOut();
+                }
+            }
+
+            
+        };
+
+        function logOut(){
+            deleteCookie("us_in_token");
+            deleteCookie("auth_token");
+            
+            window.location.href = urlAuth;
+        };
+
+        function getCookie(name) {
+            var value = "; " + document.cookie;
+            var parts = value.split("; " + name + "=");
+            if (parts.length === 2) return parts.pop().split(";").shift();
+        };
+
+        function deleteCookie(name) {
+            document.cookie = name + "=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+        };
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
